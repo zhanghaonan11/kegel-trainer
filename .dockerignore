@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+api/.env
+
+# 文档
+*.md
+!api/README.md
+
+# 开发文件
+.vscode
+.idea
+*.swp
+*.swo
+
+# 测试和构建
+coverage
+.nyc_output
+dist
+build
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 备份文件
+*.backup
+*.bak
+backup/
+
+# 日志
+*.log
+logs/
+
+# Python
+__pycache__
+*.py[cod]
+server.py
+
+# 其他
+vercel.json
+VERCEL_DEPLOYMENT.md
+DEPLOYMENT_CHECKLIST.md
