@@ -12,6 +12,10 @@ class KegelTrainer {
         this.audioManager = new AudioManager();
         this.initAudio();
 
+        // 初始化 API 客户端和数据同步
+        this.apiClient = new APIClient();
+        this.dataSyncManager = new DataSyncManager(this.apiClient);
+
         this.initElements();
         this.bindEvents();
         this.loadSettings();
@@ -291,21 +295,23 @@ class KegelTrainer {
         }, 1000);
     }
 
-    recordSession() {
+    async recordSession() {
         const settings = this.getSettings();
         const today = DateUtils.formatDate(new Date());
         const duration = settings.totalSets * settings.repsPerSet *
                         (settings.contractTime + settings.relaxTime) / 60;
 
-        let records = StorageManager.get(CONFIG.STORAGE_KEYS.records, []);
-        records.push({
+        const sessionData = {
             date: today,
             sets: settings.totalSets,
             reps: settings.repsPerSet,
-            duration: Math.round(duration * 10) / 10
-        });
+            duration: Math.round(duration * 10) / 10,
+            contract_time: settings.contractTime,
+            relax_time: settings.relaxTime
+        };
 
-        StorageManager.set(CONFIG.STORAGE_KEYS.records, records);
+        // 使用数据同步管理器保存（支持云端同步）
+        await this.dataSyncManager.saveSession(sessionData);
         this.updateStats();
     }
 
@@ -313,17 +319,29 @@ class KegelTrainer {
         this.updateStats();
     }
 
-    updateStats() {
-        const records = StorageManager.get(CONFIG.STORAGE_KEYS.records, []);
-        const uniqueDays = [...new Set(records.map(r => r.date))];
+    async updateStats() {
+        // 尝试从云端加载统计数据
+        const cloudStats = await this.dataSyncManager.loadStats();
 
-        this.elements.totalDays.textContent = uniqueDays.length;
-        this.elements.totalSessions.textContent = records.length;
+        if (cloudStats) {
+            // 使用云端数据
+            this.elements.totalDays.textContent = cloudStats.totalDays;
+            this.elements.totalSessions.textContent = cloudStats.totalSessions;
+            this.elements.totalTime.textContent = cloudStats.totalTime;
+            this.elements.streak.textContent = cloudStats.streak;
+        } else {
+            // 降级到本地计算
+            const records = StorageManager.get(CONFIG.STORAGE_KEYS.records, []);
+            const uniqueDays = [...new Set(records.map(r => r.date))];
 
-        const totalTime = records.reduce((sum, r) => sum + r.duration, 0);
-        this.elements.totalTime.textContent = Math.round(totalTime);
+            this.elements.totalDays.textContent = uniqueDays.length;
+            this.elements.totalSessions.textContent = records.length;
 
-        this.elements.streak.textContent = this.calculateStreak(uniqueDays);
+            const totalTime = records.reduce((sum, r) => sum + r.duration, 0);
+            this.elements.totalTime.textContent = Math.round(totalTime);
+
+            this.elements.streak.textContent = this.calculateStreak(uniqueDays);
+        }
     }
 
     calculateStreak(days) {

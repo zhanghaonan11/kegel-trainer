@@ -20,6 +20,7 @@
 - ✅ **数据导出**: 支持 JSON 和 CSV 格式导出
 - ✅ **数据导入**: 支持从 JSON 文件导入历史数据
 - ✅ **本地存储**: 自动保存用户设置和训练记录
+- ✅ **云端同步**: 支持 MySQL 数据库存储，多设备同步（可选）
 
 ### 用户体验
 - ✅ **自定义模态框**: 美观的提示和确认对话框
@@ -29,10 +30,31 @@
 
 ## 🚀 使用方法
 
-### 本地使用
-直接在浏览器中打开 `index.html` 文件
+### 方式 1：本地使用（纯前端）
+直接在浏览器中打开 `index.html` 文件，数据保存在本地浏览器。
 
-### 网络访问
+### 方式 2：本地使用（带数据库）
+1. 配置数据库（参考 `DATABASE_SETUP.md`）
+2. 启动 API 服务器：
+   ```bash
+   cd api
+   npm install
+   npm start
+   ```
+3. 打开 `index.html`，数据自动同步到云端数据库
+
+### 方式 3：部署到 Vercel（推荐）
+完整的云端部署，支持多设备访问和数据同步。
+
+**快速部署步骤**：
+1. 推送代码到 GitHub
+2. 在 Vercel 导入项目
+3. 配置数据库环境变量
+4. 点击部署
+
+详细步骤请查看：`VERCEL_DEPLOYMENT.md`
+
+### 方式 4：Python 服务器（简单）
 1. 运行服务器:
    ```bash
    python3 server.py
@@ -83,8 +105,9 @@
 - **错误处理**: 完善的 try-catch 和错误提示
 - **内存管理**: 正确的资源清理和释放
 - **代码复用**: 提取公共函数，减少重复代码
+- **前后端分离**: 前端 + RESTful API 架构
 
-### 核心技术
+### 前端技术
 - 纯前端实现，无外部依赖
 - 响应式设计，适配移动端
 - CSS动画 + JavaScript计时器
@@ -94,17 +117,36 @@
 - Notification API 每日提醒
 - Page Visibility API 后台运行
 
+### 后端技术（可选）
+- Node.js + Express
+- MySQL 数据库
+- RESTful API 设计
+- Vercel Serverless Functions
+- 智能同步策略（在线/离线自动切换）
+
 ## 📁 文件结构
 
 ```
 kegel/
-├── index.html      # 主页面
-├── style.css       # 样式文件
-├── config.js       # 配置常量
-├── utils.js        # 工具函数模块
-├── script.js       # 核心逻辑
-├── server.py       # Python HTTP服务器
-└── README.md       # 说明文档
+├── index.html                  # 主页面
+├── style.css                   # 样式文件
+├── config.js                   # 配置常量
+├── utils.js                    # 工具函数模块
+├── api-client.js               # API 客户端（云端同步）
+├── script.js                   # 核心逻辑
+├── server.py                   # Python HTTP服务器（简单）
+├── api/                        # 后端 API（Node.js）
+│   ├── server.js               # Express 服务器
+│   ├── index.js                # Vercel Serverless 入口
+│   ├── db.js                   # 数据库连接
+│   ├── routes.js               # API 路由
+│   ├── package.json            # 依赖配置
+│   └── README.md               # API 文档
+├── vercel.json                 # Vercel 配置
+├── README.md                   # 项目说明
+├── DATABASE_SETUP.md           # 数据库配置指南
+├── VERCEL_DEPLOYMENT.md        # Vercel 部署详细指南
+└── DEPLOYMENT_CHECKLIST.md     # 部署清单
 ```
 
 ## 🔧 优化内容
@@ -145,9 +187,47 @@ kegel/
 
 ## 🔒 隐私说明
 
+### 纯前端模式
 - 所有数据仅存储在本地浏览器
 - 不会上传任何数据到服务器
 - 导出的数据文件由用户自行保管
+
+### 云端同步模式（可选）
+- 数据加密传输（HTTPS）
+- 每个用户有独立的数据空间
+- 数据库凭证通过环境变量保护
+- 支持随时导出和删除数据
+
+## 📚 文档
+
+- **快速开始**: 查看本 README
+- **数据库配置**: `DATABASE_SETUP.md`
+- **Vercel 部署**: `VERCEL_DEPLOYMENT.md`
+- **部署清单**: `DEPLOYMENT_CHECKLIST.md`
+- **API 文档**: `api/README.md`
+
+## 🌐 在线演示
+
+部署到 Vercel 后，你将获得一个类似这样的 URL：
+- `https://kegel.vercel.app`
+
+## 🚀 快速部署
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/你的用户名/kegel.git
+cd kegel
+
+# 2. 推送到你的 GitHub
+git remote set-url origin https://github.com/你的用户名/kegel.git
+git push
+
+# 3. 在 Vercel 导入项目
+# 访问 vercel.com，导入 GitHub 仓库
+
+# 4. 配置环境变量并部署
+# 完成！
+```
 
 ## 📄 许可证
 
