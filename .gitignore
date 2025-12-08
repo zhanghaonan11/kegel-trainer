@@ -1,0 +1,71 @@
+# 操作系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE 和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# 日志文件
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 依赖目录
+node_modules/
+bower_components/
+
+# 数据备份文件（防止意外提交用户数据）
+*.backup
+*.bak
+backup/
+data-backup/
+exports/
+*.json.bak
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 临时文件
+*.tmp
+*.temp
+tmp/
+temp/
+
+# 构建输出（如果将来添加构建流程）
+dist/
+build/
+*.min.js
+*.min.css
+
+# 测试覆盖率报告
+coverage/
+.nyc_output/
+
+# Python 相关（针对 server.py）
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# 压缩文件
+*.zip
+*.tar.gz
+*.rar
