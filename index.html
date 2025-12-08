@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>凯格尔运动训练器</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%234CAF50'/></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>凯格尔运动训练</h1>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </header>
+
+        <main>
+            <div class="exercise-area">
+                <div class="animation-circle" id="animationCircle">
+                    <div class="inner-circle"></div>
+                </div>
+
+                <div class="exercise-info">
+                    <div class="action-text" id="actionText">准备开始</div>
+                    <div class="current-set">第 <span id="currentSet">1</span> 组</div>
+                    <div class="current-rep">第 <span id="currentRep">1</span> 次</div>
+                    <div class="timer" id="timer">准备开始</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="startBtn" class="btn-primary">开始训练</button>
+                <button id="pauseBtn" class="btn-secondary" disabled>暂停</button>
+                <button id="resetBtn" class="btn-secondary">重置</button>
+                <button id="exportBtn" class="btn-secondary">导出</button>
+                <button id="importBtn" class="btn-secondary">导入</button>
+            </div>
+
+            <div class="settings">
+                <h3>训练设置</h3>
+
+                <div class="preset-buttons">
+                    <button class="preset-btn" data-preset="beginner">初级</button>
+                    <button class="preset-btn" data-preset="intermediate">中级</button>
+                    <button class="preset-btn" data-preset="advanced">高级</button>
+                </div>
+
+                <div class="setting-item">
+                    <label>每组次数：</label>
+                    <input type="number" id="repsPerSet" value="10" min="5" max="20">
+                </div>
+                <div class="setting-item">
+                    <label>总组数：</label>
+                    <input type="number" id="totalSets" value="3" min="1" max="5">
+                </div>
+                <div class="setting-item">
+                    <label>收缩时间（秒）：</label>
+                    <input type="number" id="contractTime" value="5" min="3" max="10">
+                </div>
+                <div class="setting-item">
+                    <label>放松时间（秒）：</label>
+                    <input type="number" id="relaxTime" value="5" min="3" max="10">
+                </div>
+
+                <div class="setting-item">
+                    <label>音效提示：</label>
+                    <input type="checkbox" id="soundToggle" checked>
+                </div>
+
+                <div class="setting-item">
+                    <label>每日提醒：</label>
+                    <input type="checkbox" id="reminderToggle">
+                    <input type="time" id="reminderTime" value="09:00">
+                </div>
+            </div>
+
+            <div class="stats">
+                <h3>训练统计</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalDays">0</div>
+                        <div class="stat-label">训练天数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalSessions">0</div>
+                        <div class="stat-label">总次数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="streak">0</div>
+                        <div class="stat-label">连续天数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalTime">0</div>
+                        <div class="stat-label">总时长(分)</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
