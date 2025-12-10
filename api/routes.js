@@ -198,16 +198,15 @@ router.post('/settings', async (req, res) => {
       repsPerSet,
       totalSets,
       contractTime,
-      relaxTime,
-      soundEnabled,
-      reminderEnabled,
-      reminderTime
+      relaxTime
     } = req.body;
+    const soundEnabled = req.body.soundEnabled !== undefined ? !!req.body.soundEnabled : true;
+    const reminderEnabled = req.body.reminderEnabled !== undefined ? !!req.body.reminderEnabled : false;
+    const reminderTime = req.body.reminderTime || '09:00';
 
     // 验证必填字段
     if (!user_id || repsPerSet === undefined || totalSets === undefined ||
-        contractTime === undefined || relaxTime === undefined ||
-        soundEnabled === undefined || reminderEnabled === undefined || !reminderTime) {
+        contractTime === undefined || relaxTime === undefined) {
       return res.status(400).json({
         success: false,
         error: '缺少必填字段'

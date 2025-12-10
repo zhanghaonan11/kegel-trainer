@@ -7,6 +7,7 @@ class KegelTrainer {
         this.currentPhase = 'ready';
         this.timer = null;
         this.timeLeft = 0;
+        this.restTime = CONFIG.DEFAULT_SETTINGS.restTime;
 
         this.wakeLockManager = new WakeLockManager();
         this.audioManager = new AudioManager();
@@ -19,9 +20,11 @@ class KegelTrainer {
         this.initElements();
         this.bindEvents();
         this.loadSettings();
+        this.loadReminderSettings();
         this.initBackgroundSupport();
         this.loadStats();
         this.checkReminders();
+        this.reminderInterval = setInterval(() => this.checkReminders(), 30000);
     }
 
     initAudio() {
@@ -51,6 +54,7 @@ class KegelTrainer {
         this.elements.importBtn?.addEventListener('click', () => this.importData());
         this.elements.soundToggle?.addEventListener('change', (e) => {
             this.audioManager.enabled = e.target.checked;
+            this.saveSettings();
         });
         this.elements.reminderToggle?.addEventListener('change', (e) => {
             this.toggleReminder(e.target.checked);
@@ -76,6 +80,14 @@ class KegelTrainer {
                 this.elements[key].value = settings[key];
             }
         });
+        this.restTime = parseInt(settings.restTime || CONFIG.DEFAULT_SETTINGS.restTime, 10);
+
+        // 声音开关持久化
+        const soundEnabled = settings.soundEnabled !== undefined ? settings.soundEnabled : true;
+        this.audioManager.enabled = soundEnabled;
+        if (this.elements.soundToggle) {
+            this.elements.soundToggle.checked = soundEnabled;
+        }
     }
 
     saveSettings() {
@@ -83,9 +95,22 @@ class KegelTrainer {
             repsPerSet: this.elements.repsPerSet?.value,
             totalSets: this.elements.totalSets?.value,
             contractTime: this.elements.contractTime?.value,
-            relaxTime: this.elements.relaxTime?.value
+            relaxTime: this.elements.relaxTime?.value,
+            restTime: this.restTime,
+            soundEnabled: this.elements.soundToggle?.checked ?? true
         };
         StorageManager.set(CONFIG.STORAGE_KEYS.settings, settings);
+        this.audioManager.enabled = settings.soundEnabled;
+    }
+
+    loadReminderSettings() {
+        const reminders = StorageManager.get(CONFIG.STORAGE_KEYS.reminders, { enabled: false, time: '09:00' });
+        if (this.elements.reminderToggle) {
+            this.elements.reminderToggle.checked = !!reminders.enabled;
+        }
+        if (this.elements.reminderTime && reminders.time) {
+            this.elements.reminderTime.value = reminders.time;
+        }
     }
 
     getSettings() {
@@ -94,7 +119,7 @@ class KegelTrainer {
             totalSets: parseInt(this.elements.totalSets?.value || 3),
             contractTime: parseInt(this.elements.contractTime?.value || 5),
             relaxTime: parseInt(this.elements.relaxTime?.value || 5),
-            restTime: CONFIG.DEFAULT_SETTINGS.restTime
+            restTime: this.restTime || CONFIG.DEFAULT_SETTINGS.restTime
         };
     }
 
@@ -107,6 +132,7 @@ class KegelTrainer {
                 this.elements[key].value = settings[key];
             }
         });
+        this.restTime = settings.restTime || CONFIG.DEFAULT_SETTINGS.restTime;
         this.saveSettings();
         Modal.show('预设已加载', `已应用${preset === 'beginner' ? '初级' : preset === 'intermediate' ? '中级' : '高级'}训练计划`);
     }
@@ -284,6 +310,7 @@ class KegelTrainer {
     }
 
     startTimer() {
+        clearInterval(this.timer);
         this.timer = setInterval(() => {
             this.timeLeft--;
             this.elements.timer.textContent = `${this.timeLeft}秒`;
@@ -298,8 +325,10 @@ class KegelTrainer {
     async recordSession() {
         const settings = this.getSettings();
         const today = DateUtils.formatDate(new Date());
-        const duration = settings.totalSets * settings.repsPerSet *
-                        (settings.contractTime + settings.relaxTime) / 60;
+        const activeTime = settings.totalSets * settings.repsPerSet *
+                        (settings.contractTime + settings.relaxTime);
+        const restTime = Math.max(settings.totalSets - 1, 0) * settings.restTime;
+        const duration = (activeTime + restTime) / 60;
 
         const sessionData = {
             date: today,
@@ -432,7 +461,7 @@ class KegelTrainer {
         if ('Notification' in window) {
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
-                    StorageManager.set(CONFIG.STORAGE_KEYS.reminders, { enabled: true, time });
+                    StorageManager.set(CONFIG.STORAGE_KEYS.reminders, { enabled: true, time, lastNotifiedDate: null });
                     Modal.show('提醒已设置', `每天 ${time} 将提醒您进行训练`);
                 }
             });
@@ -440,28 +469,38 @@ class KegelTrainer {
     }
 
     clearReminder() {
-        StorageManager.set(CONFIG.STORAGE_KEYS.reminders, { enabled: false });
+        StorageManager.set(CONFIG.STORAGE_KEYS.reminders, { enabled: false, lastNotifiedDate: null });
     }
 
     checkReminders() {
         const reminders = StorageManager.get(CONFIG.STORAGE_KEYS.reminders, {});
-        if (reminders.enabled && 'Notification' in window) {
-            const now = new Date();
-            const [hours, minutes] = reminders.time.split(':');
-            const reminderTime = new Date();
-            reminderTime.setHours(hours, minutes, 0, 0);
+        if (!reminders.enabled || !reminders.time || !('Notification' in window)) return;
 
-            if (now >= reminderTime && now - reminderTime < 60000) {
-                new Notification('凯格尔训练提醒', {
-                    body: '该进行今天的训练了！',
-                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%234CAF50"/></svg>'
-                });
-            }
+        if (Notification.permission !== 'granted') return;
+
+        const now = new Date();
+        const [hours, minutes] = reminders.time.split(':').map(Number);
+        if (Number.isNaN(hours) || Number.isNaN(minutes)) return;
+
+        const reminderTime = new Date();
+        reminderTime.setHours(hours, minutes, 0, 0);
+
+        const sameMinute = Math.abs(now - reminderTime) < 60000;
+        const today = DateUtils.formatDate(now);
+        const alreadyNotified = reminders.lastNotifiedDate === today;
+
+        if (sameMinute && !alreadyNotified) {
+            new Notification('凯格尔训练提醒', {
+                body: '该进行今天的训练了！',
+                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill=\"%234CAF50\"/></svg>'
+            });
+            StorageManager.set(CONFIG.STORAGE_KEYS.reminders, { ...reminders, lastNotifiedDate: today });
         }
     }
 
     cleanup() {
         clearInterval(this.timer);
+        clearInterval(this.reminderInterval);
         this.wakeLockManager.release();
     }
 }
