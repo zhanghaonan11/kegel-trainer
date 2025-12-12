@@ -8,6 +8,7 @@ class KegelTrainer {
         this.timer = null;
         this.timeLeft = 0;
         this.restTime = CONFIG.DEFAULT_SETTINGS.restTime;
+        this.completeTimeout = null;
 
         this.wakeLockManager = new WakeLockManager();
         this.audioManager = new AudioManager();
@@ -37,7 +38,7 @@ class KegelTrainer {
                      'currentRep', 'timer', 'actionText', 'progressFill', 'animationCircle',
                      'repsPerSet', 'totalSets', 'contractTime', 'relaxTime', 'totalDays',
                      'totalSessions', 'streak', 'totalTime', 'presetBtns', 'soundToggle',
-                     'reminderToggle', 'reminderTime'];
+                     'syncToggle', 'syncStatus', 'reminderToggle', 'reminderTime'];
 
         this.elements = {};
         ids.forEach(id => {
@@ -56,6 +57,9 @@ class KegelTrainer {
             this.audioManager.enabled = e.target.checked;
             this.saveSettings();
         });
+        this.elements.syncToggle?.addEventListener('change', (e) => {
+            this.handleSyncToggle(e.target.checked);
+        });
         this.elements.reminderToggle?.addEventListener('change', (e) => {
             this.toggleReminder(e.target.checked);
         });
@@ -71,6 +75,9 @@ class KegelTrainer {
         window.addEventListener('beforeunload', () => {
             this.cleanup();
         });
+
+        // 初始同步状态检查
+        this.updateSyncStatus(true);
     }
 
     loadSettings() {
@@ -88,15 +95,24 @@ class KegelTrainer {
         if (this.elements.soundToggle) {
             this.elements.soundToggle.checked = soundEnabled;
         }
+
+        if (this.elements.syncToggle) {
+            this.elements.syncToggle.checked = this.dataSyncManager.syncEnabled;
+        }
+        this.updateSyncStatus();
     }
 
     saveSettings() {
+        const toInt = (value, fallback) => {
+            const num = parseInt(value, 10);
+            return Number.isNaN(num) ? fallback : num;
+        };
         const settings = {
-            repsPerSet: this.elements.repsPerSet?.value,
-            totalSets: this.elements.totalSets?.value,
-            contractTime: this.elements.contractTime?.value,
-            relaxTime: this.elements.relaxTime?.value,
-            restTime: this.restTime,
+            repsPerSet: toInt(this.elements.repsPerSet?.value, CONFIG.DEFAULT_SETTINGS.repsPerSet),
+            totalSets: toInt(this.elements.totalSets?.value, CONFIG.DEFAULT_SETTINGS.totalSets),
+            contractTime: toInt(this.elements.contractTime?.value, CONFIG.DEFAULT_SETTINGS.contractTime),
+            relaxTime: toInt(this.elements.relaxTime?.value, CONFIG.DEFAULT_SETTINGS.relaxTime),
+            restTime: toInt(this.restTime, CONFIG.DEFAULT_SETTINGS.restTime),
             soundEnabled: this.elements.soundToggle?.checked ?? true
         };
         StorageManager.set(CONFIG.STORAGE_KEYS.settings, settings);
@@ -143,6 +159,7 @@ class KegelTrainer {
             return;
         }
 
+        this.clearCompletionPrompt();
         await this.wakeLockManager.request();
 
         this.isRunning = true;
@@ -169,6 +186,7 @@ class KegelTrainer {
     resume() {
         this.isPaused = false;
         this.isRunning = true;
+        this.clearCompletionPrompt();
         this.startTimer();
         this.updateButtons();
     }
@@ -183,6 +201,7 @@ class KegelTrainer {
 
         clearInterval(this.timer);
         this.wakeLockManager.release();
+        this.clearCompletionPrompt();
 
         this.updateUI();
         this.updateButtons();
@@ -256,10 +275,12 @@ class KegelTrainer {
         this.recordSession();
         VibrationManager.vibrate([200, 100, 200]);
 
-        setTimeout(async () => {
+        this.clearCompletionPrompt();
+        this.completeTimeout = setTimeout(async () => {
             await Modal.show('训练完成', '恭喜！今日训练完成！', [
                 { text: '太棒了', primary: true }
             ]);
+            this.completeTimeout = null;
         }, 500);
     }
 
@@ -289,6 +310,12 @@ class KegelTrainer {
         const completedReps = (this.currentSet - 1) * settings.repsPerSet + (this.currentRep - 1);
         const progress = Math.min((completedReps / totalReps) * 100, 100);
         this.elements.progressFill.style.width = `${progress}%`;
+    }
+
+    handleSyncToggle(enabled) {
+        this.dataSyncManager.toggleSync(enabled);
+        this.updateSyncStatus(true);
+        Toast.show(enabled ? '云端同步已开启' : '云端同步已关闭');
     }
 
     initBackgroundSupport() {
@@ -395,6 +422,21 @@ class KegelTrainer {
         return streak;
     }
 
+    async updateSyncStatus(forceCheck = false) {
+        if (!this.elements.syncStatus) return;
+
+        if (!this.dataSyncManager.syncEnabled) {
+            this.elements.syncStatus.textContent = '已关闭';
+            this.elements.syncStatus.classList.remove('online');
+            return;
+        }
+
+        this.elements.syncStatus.textContent = '检测中...';
+        const online = forceCheck ? await this.dataSyncManager.checkConnection() : this.dataSyncManager.isOnline;
+        this.elements.syncStatus.textContent = online ? '在线' : '离线';
+        this.elements.syncStatus.classList.toggle('online', online);
+    }
+
     async exportData() {
         const result = await Modal.show('导出数据', '选择导出格式', [
             { text: 'JSON', primary: false },
@@ -461,7 +503,12 @@ class KegelTrainer {
         if ('Notification' in window) {
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
-                    StorageManager.set(CONFIG.STORAGE_KEYS.reminders, { enabled: true, time, lastNotifiedDate: null });
+                    StorageManager.set(CONFIG.STORAGE_KEYS.reminders, {
+                        enabled: true,
+                        time,
+                        lastNotifiedDate: null,
+                        lastNotifiedAt: null
+                    });
                     Modal.show('提醒已设置', `每天 ${time} 将提醒您进行训练`);
                 }
             });
@@ -469,7 +516,11 @@ class KegelTrainer {
     }
 
     clearReminder() {
-        StorageManager.set(CONFIG.STORAGE_KEYS.reminders, { enabled: false, lastNotifiedDate: null });
+        StorageManager.set(CONFIG.STORAGE_KEYS.reminders, {
+            enabled: false,
+            lastNotifiedDate: null,
+            lastNotifiedAt: null
+        });
     }
 
     checkReminders() {
@@ -485,16 +536,23 @@ class KegelTrainer {
         const reminderTime = new Date();
         reminderTime.setHours(hours, minutes, 0, 0);
 
-        const sameMinute = Math.abs(now - reminderTime) < 60000;
+        const diff = now - reminderTime;
+        const sameMinute = diff >= 0 && diff < 60000;
         const today = DateUtils.formatDate(now);
-        const alreadyNotified = reminders.lastNotifiedDate === today;
+        const lastNotifiedAt = reminders.lastNotifiedAt ? new Date(reminders.lastNotifiedAt) : null;
+        const notifiedRecently = lastNotifiedAt && (now - lastNotifiedAt) < 60000;
+        const alreadyNotified = reminders.lastNotifiedDate === today || notifiedRecently;
 
         if (sameMinute && !alreadyNotified) {
             new Notification('凯格尔训练提醒', {
                 body: '该进行今天的训练了！',
                 icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill=\"%234CAF50\"/></svg>'
             });
-            StorageManager.set(CONFIG.STORAGE_KEYS.reminders, { ...reminders, lastNotifiedDate: today });
+            StorageManager.set(CONFIG.STORAGE_KEYS.reminders, {
+                ...reminders,
+                lastNotifiedDate: today,
+                lastNotifiedAt: now.toISOString()
+            });
         }
     }
 
@@ -502,6 +560,13 @@ class KegelTrainer {
         clearInterval(this.timer);
         clearInterval(this.reminderInterval);
         this.wakeLockManager.release();
+    }
+
+    clearCompletionPrompt() {
+        if (this.completeTimeout) {
+            clearTimeout(this.completeTimeout);
+            this.completeTimeout = null;
+        }
     }
 }
 

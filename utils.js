@@ -162,9 +162,53 @@ class Modal {
     }
 }
 
+class Toast {
+    static ensureStyles() {
+        if (document.getElementById('toast-styles')) return;
+
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+            .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1100; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+            .toast-message { background: rgba(0, 0, 0, 0.8); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); max-width: 260px; text-align: center; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    static ensureContainer() {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    static show(message, duration = 2500) {
+        this.ensureStyles();
+        const container = this.ensureContainer();
+
+        const toast = document.createElement('div');
+        toast.className = 'toast-message';
+        toast.textContent = message;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+            if (!container.children.length) container.remove();
+        }, duration);
+    }
+}
+
 class DateUtils {
     static formatDate(date) {
-        return date.toISOString().split('T')[0];
+        // 使用本地时区生成 YYYY-MM-DD，避免 UTC 偏移导致日期错误
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     static getDaysDiff(date1, date2) {

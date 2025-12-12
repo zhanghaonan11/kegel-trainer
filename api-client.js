@@ -31,11 +31,11 @@ class APIClient {
         try {
             const url = `${this.baseURL}${endpoint}`;
             const config = {
+                ...options,
                 headers: {
                     'Content-Type': 'application/json',
-                    ...options.headers
-                },
-                ...options
+                    ...(options.headers || {})
+                }
             };
 
             const response = await fetch(url, config);
@@ -99,7 +99,11 @@ class APIClient {
     // 检查 API 连接状态
     async checkConnection() {
         try {
-            const response = await fetch(`${this.baseURL.replace('/api', '')}/health`);
+            const base = this.baseURL.startsWith('http')
+                ? new URL(this.baseURL)
+                : new URL(window.location.origin + this.baseURL);
+            const healthUrl = new URL('/health', base);
+            const response = await fetch(healthUrl.toString());
             return response.ok;
         } catch (error) {
             return false;
@@ -112,13 +116,30 @@ class DataSyncManager {
     constructor(apiClient) {
         this.apiClient = apiClient;
         this.isOnline = false;
-        this.syncEnabled = true;
+        this.syncEnabled = StorageManager.get('sync_enabled', true);
+        this.offlineNotified = false;
+        this.syncErrorNotified = false;
         this.checkConnection();
     }
 
     // 检查连接状态
     async checkConnection() {
+        if (!this.syncEnabled) {
+            this.isOnline = false;
+            return this.isOnline;
+        }
+
+        const wasOnline = this.isOnline;
         this.isOnline = await this.apiClient.checkConnection();
+
+        if (this.isOnline) {
+            this.offlineNotified = false;
+            this.syncErrorNotified = false;
+        } else if (!this.offlineNotified) {
+            Toast.show('当前离线，将使用本地数据');
+            this.offlineNotified = true;
+        }
+
         return this.isOnline;
     }
 
@@ -136,6 +157,10 @@ class DataSyncManager {
                 console.log('✓ 训练记录已同步到云端');
             } catch (error) {
                 console.warn('云端同步失败，数据已保存到本地:', error.message);
+                if (!this.syncErrorNotified) {
+                    Toast.show('云端同步失败，已保存到本地');
+                    this.syncErrorNotified = true;
+                }
             }
         }
     }

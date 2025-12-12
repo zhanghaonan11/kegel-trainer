@@ -297,6 +297,28 @@ main {
     margin-left: 10px;
 }
 
+.setting-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge {
+    background: #f0f0f0;
+    color: #555;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 1;
+    min-width: 64px;
+    text-align: center;
+}
+
+.status-badge.online {
+    background: #e6f7e9;
+    color: #2d8a3f;
+}
+
 /* 模态框 */
 .modal-overlay {
     position: fixed;
