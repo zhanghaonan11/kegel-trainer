@@ -116,21 +116,42 @@ class DataSyncManager {
     constructor(apiClient) {
         this.apiClient = apiClient;
         this.isOnline = false;
-        this.syncEnabled = StorageManager.get('sync_enabled', true);
+        this.syncEnabled = StorageManager.get(CONFIG.STORAGE_KEYS.syncEnabled, true);
         this.offlineNotified = false;
         this.syncErrorNotified = false;
+
+        // 连接状态缓存
+        this.connectionCache = {
+            status: null,
+            timestamp: 0
+        };
+
         this.checkConnection();
     }
 
-    // 检查连接状态
+    // 检查连接状态（带缓存）
     async checkConnection() {
         if (!this.syncEnabled) {
             this.isOnline = false;
             return this.isOnline;
         }
 
+        // 检查缓存是否有效
+        const now = Date.now();
+        const cacheTTL = CONFIG.TIMING?.CONNECTION_CACHE_TTL || 30000;
+        if (this.connectionCache.status !== null && (now - this.connectionCache.timestamp) < cacheTTL) {
+            this.isOnline = this.connectionCache.status;
+            return this.isOnline;
+        }
+
         const wasOnline = this.isOnline;
         this.isOnline = await this.apiClient.checkConnection();
+
+        // 更新缓存
+        this.connectionCache = {
+            status: this.isOnline,
+            timestamp: now
+        };
 
         if (this.isOnline) {
             this.offlineNotified = false;
@@ -141,6 +162,12 @@ class DataSyncManager {
         }
 
         return this.isOnline;
+    }
+
+    // 强制刷新连接状态
+    async forceCheckConnection() {
+        this.connectionCache = { status: null, timestamp: 0 };
+        return this.checkConnection();
     }
 
     // 保存训练记录（支持离线）
@@ -259,7 +286,9 @@ class DataSyncManager {
     // 切换同步状态
     toggleSync(enabled) {
         this.syncEnabled = enabled;
-        StorageManager.set('sync_enabled', enabled);
+        StorageManager.set(CONFIG.STORAGE_KEYS.syncEnabled, enabled);
+        // 重置连接缓存
+        this.connectionCache = { status: null, timestamp: 0 };
         return this.syncEnabled;
     }
 }

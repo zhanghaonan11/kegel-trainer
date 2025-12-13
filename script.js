@@ -10,6 +10,10 @@ class KegelTrainer {
         this.restTime = CONFIG.DEFAULT_SETTINGS.restTime;
         this.completeTimeout = null;
 
+        // 基于时间戳的计时器状态
+        this.timerStartTime = null;
+        this.timerDuration = 0;
+
         this.wakeLockManager = new WakeLockManager();
         this.audioManager = new AudioManager();
         this.initAudio();
@@ -18,6 +22,9 @@ class KegelTrainer {
         this.apiClient = new APIClient();
         this.dataSyncManager = new DataSyncManager(this.apiClient);
 
+        // 缓存预设按钮
+        this.presetBtns = document.querySelectorAll('.preset-btn');
+
         this.initElements();
         this.bindEvents();
         this.loadSettings();
@@ -25,7 +32,10 @@ class KegelTrainer {
         this.initBackgroundSupport();
         this.loadStats();
         this.checkReminders();
-        this.reminderInterval = setInterval(() => this.checkReminders(), 30000);
+        this.reminderInterval = setInterval(() => this.checkReminders(), CONFIG.TIMING.REMINDER_CHECK_INTERVAL);
+
+        // 尝试恢复训练进度
+        this.tryRestoreProgress();
     }
 
     initAudio() {
@@ -68,11 +78,13 @@ class KegelTrainer {
             this.elements[setting]?.addEventListener('change', () => this.saveSettings());
         });
 
-        document.querySelectorAll('.preset-btn').forEach(btn => {
+        // 使用缓存的预设按钮
+        this.presetBtns.forEach(btn => {
             btn.addEventListener('click', () => this.loadPreset(btn.dataset.preset));
         });
 
         window.addEventListener('beforeunload', () => {
+            this.saveProgress();
             this.cleanup();
         });
 
@@ -254,6 +266,9 @@ class KegelTrainer {
 
         this.updateUI();
         this.updateProgress();
+
+        // 重新启动计时器以继续下一阶段
+        this.startTimer();
     }
 
     updateActionText(text, className) {
@@ -338,15 +353,40 @@ class KegelTrainer {
 
     startTimer() {
         clearInterval(this.timer);
-        this.timer = setInterval(() => {
-            this.timeLeft--;
-            this.elements.timer.textContent = `${this.timeLeft}秒`;
-            this.updateTitle();
+
+        // 使用基于时间戳的计时，避免 setInterval 累积误差
+        this.timerStartTime = Date.now();
+        this.timerDuration = this.timeLeft * 1000;
+
+        const tick = () => {
+            const elapsed = Date.now() - this.timerStartTime;
+            const remaining = Math.ceil((this.timerDuration - elapsed) / 1000);
+
+            if (remaining !== this.timeLeft) {
+                this.timeLeft = Math.max(remaining, 0);
+
+                // 倒计时最后3秒警告
+                if (this.timeLeft <= CONFIG.TIMING.COUNTDOWN_WARNING && this.timeLeft > 0) {
+                    this.elements.timer.classList.add('countdown-warning');
+                    this.elements.timer.textContent = `${this.timeLeft}秒`;
+                } else {
+                    this.elements.timer.classList.remove('countdown-warning');
+                    this.elements.timer.textContent = `${this.timeLeft}秒`;
+                }
+
+                this.updateTitle();
+            }
 
             if (this.timeLeft <= 0) {
+                clearInterval(this.timer);
+                this.elements.timer.classList.remove('countdown-warning');
                 this.nextPhase();
             }
-        }, 1000);
+        };
+
+        // 立即执行一次
+        tick();
+        this.timer = setInterval(tick, 100); // 更频繁检查以提高精度
     }
 
     async recordSession() {
@@ -471,6 +511,12 @@ class KegelTrainer {
                 const text = await file.text();
                 const data = JSON.parse(text);
 
+                // 验证数据结构
+                if (!this.validateImportData(data)) {
+                    Modal.show('错误', '导入失败：数据格式不正确或已损坏');
+                    return;
+                }
+
                 const result = await Modal.show('导入数据', '确定要导入数据吗？这将覆盖现有数据。', [
                     { text: '确定', primary: true },
                     { text: '取消', primary: false }
@@ -478,7 +524,10 @@ class KegelTrainer {
 
                 if (result === 0) {
                     if (data.records) StorageManager.set(CONFIG.STORAGE_KEYS.records, data.records);
-                    if (data.settings) StorageManager.set(CONFIG.STORAGE_KEYS.settings, data.settings);
+                    if (data.settings) {
+                        const validatedSettings = this.validateSettings(data.settings);
+                        StorageManager.set(CONFIG.STORAGE_KEYS.settings, validatedSettings);
+                    }
                     this.loadSettings();
                     this.updateStats();
                     Modal.show('成功', '数据导入成功！');
@@ -488,6 +537,25 @@ class KegelTrainer {
             }
         };
         input.click();
+    }
+
+    // 验证导入数据结构
+    validateImportData(data) {
+        if (!data || typeof data !== 'object') return false;
+
+        // 验证 records 数组
+        if (data.records) {
+            if (!Array.isArray(data.records)) return false;
+            for (const record of data.records) {
+                if (!record.date || typeof record.date !== 'string') return false;
+                if (typeof record.duration !== 'number' || record.duration < 0) return false;
+            }
+        }
+
+        // 验证 settings 对象
+        if (data.settings && typeof data.settings !== 'object') return false;
+
+        return true;
     }
 
     toggleReminder(enabled) {
@@ -567,6 +635,83 @@ class KegelTrainer {
             clearTimeout(this.completeTimeout);
             this.completeTimeout = null;
         }
+    }
+
+    // 保存训练进度
+    saveProgress() {
+        if (!this.isRunning && !this.isPaused) {
+            StorageManager.remove(CONFIG.STORAGE_KEYS.progress);
+            return;
+        }
+
+        const progress = {
+            currentSet: this.currentSet,
+            currentRep: this.currentRep,
+            currentPhase: this.currentPhase,
+            timeLeft: this.timeLeft,
+            isPaused: this.isPaused,
+            savedAt: Date.now()
+        };
+        StorageManager.set(CONFIG.STORAGE_KEYS.progress, progress);
+    }
+
+    // 尝试恢复训练进度
+    async tryRestoreProgress() {
+        const progress = StorageManager.get(CONFIG.STORAGE_KEYS.progress);
+        if (!progress) return;
+
+        // 检查进度是否过期（超过30分钟）
+        const elapsed = Date.now() - progress.savedAt;
+        if (elapsed > 30 * 60 * 1000) {
+            StorageManager.remove(CONFIG.STORAGE_KEYS.progress);
+            return;
+        }
+
+        const result = await Modal.show(
+            '恢复训练',
+            `检测到未完成的训练（第${progress.currentSet}组第${progress.currentRep}次），是否继续？`,
+            [
+                { text: '继续训练', primary: true },
+                { text: '重新开始', primary: false }
+            ]
+        );
+
+        if (result === 0) {
+            // 恢复进度
+            this.currentSet = progress.currentSet;
+            this.currentRep = progress.currentRep;
+            this.currentPhase = progress.currentPhase;
+            this.timeLeft = progress.timeLeft;
+            this.isPaused = true;
+            this.isRunning = false;
+
+            this.updateUI();
+            this.updateProgress();
+            this.updateButtons();
+            this.elements.timer.textContent = '已暂停';
+
+            const phaseText = progress.currentPhase === 'contract' ? '夹紧' :
+                             progress.currentPhase === 'relax' ? '放松' : '休息';
+            this.updateActionText(phaseText, progress.currentPhase === 'rest' ? '' : progress.currentPhase);
+        }
+
+        StorageManager.remove(CONFIG.STORAGE_KEYS.progress);
+    }
+
+    // 验证设置值
+    validateSettings(settings) {
+        const validated = {};
+        for (const [key, value] of Object.entries(settings)) {
+            const range = CONFIG.VALIDATION[key];
+            if (range) {
+                const num = parseInt(value, 10);
+                validated[key] = Number.isNaN(num) ? CONFIG.DEFAULT_SETTINGS[key] :
+                    Math.max(range.min, Math.min(range.max, num));
+            } else {
+                validated[key] = value;
+            }
+        }
+        return validated;
     }
 }
 

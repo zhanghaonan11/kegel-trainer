@@ -1,3 +1,20 @@
+// HTML 转义工具
+class HTMLEscaper {
+    static escapeMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        '/': '&#x2F;'
+    };
+
+    static escape(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/[&<>"'/]/g, char => this.escapeMap[char]);
+    }
+}
+
 // 工具函数模块
 class StorageManager {
     static get(key, defaultValue = null) {
@@ -124,15 +141,19 @@ class WakeLockManager {
 class Modal {
     static show(title, message, buttons = [{ text: '确定', primary: true }]) {
         return new Promise((resolve) => {
+            // 转义用户输入防止 XSS
+            const safeTitle = HTMLEscaper.escape(title);
+            const safeMessage = HTMLEscaper.escape(message);
+
             const modal = document.createElement('div');
             modal.className = 'modal-overlay';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <h3 class="modal-title">${title}</h3>
-                    <p class="modal-message">${message}</p>
+                    <h3 class="modal-title">${safeTitle}</h3>
+                    <p class="modal-message">${safeMessage}</p>
                     <div class="modal-buttons">
                         ${buttons.map((btn, i) =>
-                            `<button class="modal-btn ${btn.primary ? 'btn-primary' : 'btn-secondary'}" data-index="${i}">${btn.text}</button>`
+                            `<button class="modal-btn ${btn.primary ? 'btn-primary' : 'btn-secondary'}" data-index="${i}">${HTMLEscaper.escape(btn.text)}</button>`
                         ).join('')}
                     </div>
                 </div>
@@ -158,7 +179,7 @@ class Modal {
         setTimeout(() => {
             document.body.removeChild(modal);
             resolve(result);
-        }, 300);
+        }, CONFIG.TIMING?.MODAL_ANIMATION || 300);
     }
 }
 
@@ -185,20 +206,22 @@ class Toast {
         return container;
     }
 
-    static show(message, duration = 2500) {
+    static show(message, duration) {
         this.ensureStyles();
         const container = this.ensureContainer();
 
         const toast = document.createElement('div');
         toast.className = 'toast-message';
+        // 使用 textContent 防止 XSS
         toast.textContent = message;
 
         container.appendChild(toast);
 
+        const displayDuration = duration || CONFIG.TIMING?.TOAST_DURATION || 2500;
         setTimeout(() => {
             toast.remove();
             if (!container.children.length) container.remove();
-        }, duration);
+        }, displayDuration);
     }
 }
 

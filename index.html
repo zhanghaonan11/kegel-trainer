@@ -17,25 +17,28 @@
         </header>
 
         <main>
-            <div class="exercise-area">
-                <div class="animation-circle" id="animationCircle">
+            <!-- 无障碍: 添加 live region 用于状态播报 -->
+            <div id="statusAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+            <div class="exercise-area" role="region" aria-label="训练区域">
+                <div class="animation-circle" id="animationCircle" role="img" aria-label="训练动画">
                     <div class="inner-circle"></div>
                 </div>
 
                 <div class="exercise-info">
-                    <div class="action-text" id="actionText">准备开始</div>
+                    <div class="action-text" id="actionText" aria-live="assertive">准备开始</div>
                     <div class="current-set">第 <span id="currentSet">1</span> 组</div>
                     <div class="current-rep">第 <span id="currentRep">1</span> 次</div>
-                    <div class="timer" id="timer">准备开始</div>
+                    <div class="timer" id="timer" aria-live="polite">准备开始</div>
                 </div>
             </div>
 
-            <div class="controls">
-                <button id="startBtn" class="btn-primary">开始训练</button>
-                <button id="pauseBtn" class="btn-secondary" disabled>暂停</button>
-                <button id="resetBtn" class="btn-secondary">重置</button>
-                <button id="exportBtn" class="btn-secondary">导出</button>
-                <button id="importBtn" class="btn-secondary">导入</button>
+            <div class="controls" role="group" aria-label="训练控制">
+                <button id="startBtn" class="btn-primary" aria-label="开始训练">开始训练</button>
+                <button id="pauseBtn" class="btn-secondary" disabled aria-label="暂停训练">暂停</button>
+                <button id="resetBtn" class="btn-secondary" aria-label="重置训练">重置</button>
+                <button id="exportBtn" class="btn-secondary" aria-label="导出数据">导出</button>
+                <button id="importBtn" class="btn-secondary" aria-label="导入数据">导入</button>
             </div>
 
             <div class="settings">
