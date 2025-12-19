@@ -151,7 +151,8 @@ main {
     line-height: 1.6;
 }
 
-.current-set, .current-rep {
+.current-set,
+.current-rep {
     color: var(--color-text-muted);
     margin-bottom: var(--spacing-md);
 }
@@ -196,7 +197,8 @@ main {
     min-width: 70px;
 }
 
-.btn-primary, .btn-secondary {
+.btn-primary,
+.btn-secondary {
     padding: 12px 24px;
     border: none;
     border-radius: var(--radius-full);
@@ -225,7 +227,8 @@ main {
     transform: translateY(-2px);
 }
 
-.btn-primary:disabled, .btn-secondary:disabled {
+.btn-primary:disabled,
+.btn-secondary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
@@ -236,7 +239,8 @@ main {
     padding: var(--spacing-xl);
 }
 
-.settings h3, .stats h3 {
+.settings h3,
+.stats h3 {
     margin-bottom: var(--spacing-lg);
     color: var(--color-text);
 }
@@ -503,8 +507,15 @@ main {
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
 }
 
 /* 无障碍：屏幕阅读器专用样式 */
@@ -518,4 +529,49 @@ main {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+/* 布局结构 (新) */
+.layout-grid,
+.layout-main,
+.layout-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xl);
+    width: 100%;
+}
+
+/* 移除stats的margin-top，统一使用gap控制间距 */
+.stats {
+    margin-top: 0;
+}
+
+/* 桌面端布局优化 */
+@media (min-width: 769px) {
+    .container {
+        max-width: 1000px;
+        padding: 40px;
+    }
+
+    .layout-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: start;
+    }
+
+    /* 调整左侧内容 */
+    .exercise-area {
+        height: 100%;
+        /* 如果需要等高 */
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* 调整设置面板使其看起来更紧凑 */
+    .settings {
+        padding: 30px;
+    }
 }
