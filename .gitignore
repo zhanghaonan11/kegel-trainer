@@ -69,3 +69,6 @@ ENV/
 *.zip
 *.tar.gz
 *.rar
+
+# AI 工具
+.claude/
