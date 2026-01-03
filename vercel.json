@@ -1,12 +1,7 @@
 {
   "version": 2,
-  "framework": null,
-  "buildCommand": null,
-  "outputDirectory": null,
-  "installCommand": "cd api && npm install",
   "functions": {
     "api/index.js": {
-      "runtime": "@vercel/node@3.0.0",
       "maxDuration": 10
     }
   },
@@ -41,10 +36,5 @@
       ]
     }
   ],
-  "regions": ["sin1"],
-  "build": {
-    "env": {
-      "NODE_VERSION": "18"
-    }
-  }
+  "regions": ["sin1"]
 }
