@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "凯格尔运动训练器后端 API 服务",
   "main": "server.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
