@@ -3,17 +3,27 @@ class APIClient {
     constructor(baseURL) {
         // 自动检测环境
         if (!baseURL) {
-            // 如果在 Vercel 或生产环境，使用相对路径
-            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                this.baseURL = '/api';
-            } else {
+            const hostname = window.location.hostname;
+
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
                 // 本地开发环境
                 this.baseURL = 'http://localhost:3000/api';
+            } else if (hostname.includes('github.io')) {
+                // GitHub Pages - 使用 Render 部署的 API
+                // 部署后请将此地址替换为你的 Render API 地址
+                this.baseURL = 'https://kegel-trainer-api.onrender.com/api';
+            } else if (hostname.includes('vercel.app') || hostname.includes('netlify.app')) {
+                // Vercel/Netlify - 使用相对路径
+                this.baseURL = '/api';
+            } else {
+                // 其他生产环境 - 尝试相对路径
+                this.baseURL = '/api';
             }
         } else {
             this.baseURL = baseURL;
         }
         this.userId = this.getUserId();
+        console.log('API Base URL:', this.baseURL);
     }
 
     // 获取或生成用户 ID
