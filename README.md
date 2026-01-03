@@ -2,6 +2,7 @@
 
 一个功能完善的凯格尔运动训练网页应用，支持自定义训练计划、音效提示、数据管理等多项功能。
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/zhanghaonan11/kegel-trainer&env=DB_HOST,DB_USER,DB_PASSWORD,DB_NAME&envDescription=MySQL%20database%20connection%20settings&envLink=https://github.com/zhanghaonan11/kegel-trainer/blob/main/DATABASE_SETUP.md)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/zhanghaonan11/kegel-trainer)
 
 ## ✨ 核心功能
@@ -48,13 +49,26 @@
 3. 打开 `index.html`，数据自动同步到云端数据库
 
 ### 方式 3：部署到 Vercel（推荐）
-完整的云端部署，支持多设备访问和数据同步。
 
-**快速部署步骤**：
-1. 推送代码到 GitHub
-2. 在 Vercel 导入项目
-3. 配置数据库环境变量
-4. 点击部署
+一键部署到 Vercel，支持前后端一体化部署：
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/zhanghaonan11/kegel-trainer&env=DB_HOST,DB_USER,DB_PASSWORD,DB_NAME&envDescription=MySQL%20database%20connection%20settings)
+
+**部署步骤**：
+1. 点击上方按钮，登录 Vercel
+2. 填写数据库环境变量：
+   - `DB_HOST` - 数据库地址（如 mysql.sqlpub.com）
+   - `DB_USER` - 数据库用户名
+   - `DB_PASSWORD` - 数据库密码
+   - `DB_NAME` - 数据库名称
+3. 点击 Deploy，等待部署完成
+4. 访问分配的域名即可使用
+
+**Vercel 优势**：
+- 前端 + API 一体化部署
+- 自动 HTTPS
+- 全球 CDN 加速
+- 自动构建部署
 
 详细步骤请查看：`VERCEL_DEPLOYMENT.md`
 
