@@ -2,6 +2,8 @@
 
 一个功能完善的凯格尔运动训练网页应用，支持自定义训练计划、音效提示、数据管理等多项功能。
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/zhanghaonan11/kegel-trainer)
+
 ## ✨ 核心功能
 
 ### 训练功能
@@ -56,7 +58,22 @@
 
 详细步骤请查看：`VERCEL_DEPLOYMENT.md`
 
-### 方式 4：Python 服务器（简单）
+### 方式 4：部署到 Render（一键部署）
+
+点击下方按钮一键部署到 Render：
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/zhanghaonan11/kegel-trainer)
+
+**部署后配置**：
+1. 点击按钮后，Render 会自动创建服务
+2. 在 Dashboard 中配置环境变量：
+   - `DB_HOST` - 数据库地址
+   - `DB_USER` - 数据库用户名
+   - `DB_PASSWORD` - 数据库密码
+   - `DB_NAME` - 数据库名称
+3. 服务会自动重新部署
+
+### 方式 5：Python 服务器（简单）
 1. 运行服务器:
    ```bash
    python3 server.py
@@ -145,6 +162,7 @@ kegel/
 │   ├── package.json            # 依赖配置
 │   └── README.md               # API 文档
 ├── vercel.json                 # Vercel 配置
+├── render.yaml                 # Render 一键部署配置
 ├── README.md                   # 项目说明
 ├── DATABASE_SETUP.md           # 数据库配置指南
 ├── VERCEL_DEPLOYMENT.md        # Vercel 部署详细指南

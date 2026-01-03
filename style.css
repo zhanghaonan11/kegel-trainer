@@ -6,6 +6,8 @@
     --color-secondary: #6366f1;
     --color-secondary-light: rgba(99, 102, 241, 0.15);
     --color-accent: #f59e0b;
+    --color-pink: #ec4899;
+    --color-cyan: #06b6d4;
     --color-text: #1e293b;
     --color-text-muted: #64748b;
     --color-text-light: #94a3b8;
@@ -20,6 +22,8 @@
     --gradient-stat: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(99, 102, 241, 0.9));
     --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
     --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+    --gradient-rainbow: linear-gradient(135deg, #10b981, #06b6d4, #6366f1, #ec4899);
+    --gradient-neon: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #6366f1 100%);
 
     /* 阴影 */
     --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -29,18 +33,21 @@
     --shadow-relax: 0 0 40px rgba(99, 102, 241, 0.5), 0 0 80px rgba(99, 102, 241, 0.2);
     --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.3);
     --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-neon: 0 0 30px rgba(16, 185, 129, 0.4), 0 0 60px rgba(99, 102, 241, 0.2);
 
     /* 圆角 */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-xl: 24px;
+    --radius-2xl: 32px;
     --radius-full: 9999px;
     --radius-circle: 50%;
 
     /* 过渡 */
     --transition-fast: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
     /* 间距 */
     --spacing-xs: 6px;
@@ -75,11 +82,25 @@ body::before {
     width: 200%;
     height: 200%;
     background:
-        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 40% 60%, rgba(245, 158, 11, 0.1) 0%, transparent 30%);
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.18) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.18) 0%, transparent 40%),
+        radial-gradient(circle at 40% 60%, rgba(236, 72, 153, 0.12) 0%, transparent 30%),
+        radial-gradient(circle at 70% 30%, rgba(6, 182, 212, 0.12) 0%, transparent 35%);
     animation: float 20s ease-in-out infinite;
     z-index: -1;
+}
+
+/* 网格背景 */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: -1;
+    pointer-events: none;
 }
 
 @keyframes float {
@@ -101,33 +122,52 @@ body::before {
 header {
     text-align: center;
     margin-bottom: var(--spacing-2xl);
+    position: relative;
 }
 
 h1 {
-    color: var(--color-white);
-    font-size: 28px;
+    background: linear-gradient(135deg, #fff 0%, #10b981 40%, #06b6d4 60%, #6366f1 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 32px;
     margin-bottom: var(--spacing-xl);
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: -0.5px;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    animation: gradient-shift 5s ease infinite;
+    filter: drop-shadow(0 2px 10px rgba(16, 185, 129, 0.3));
+}
+
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
 }
 
 .progress-bar {
-    background: rgba(255, 255, 255, 0.15);
-    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    height: 12px;
     border-radius: var(--radius-full);
     overflow: hidden;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-fill {
-    background: var(--gradient-accent);
+    background: var(--gradient-neon);
+    background-size: 200% 100%;
     height: 100%;
     width: 0%;
     transition: width var(--transition-fast);
     border-radius: var(--radius-full);
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+    animation: progress-glow 2s ease-in-out infinite;
+}
+
+@keyframes progress-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(6, 182, 212, 0.6); }
 }
 
 main {
@@ -139,13 +179,16 @@ main {
 
 .exercise-area {
     background: var(--gradient-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: var(--radius-xl);
-    padding: 48px var(--spacing-xl);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: var(--radius-2xl);
+    padding: 56px var(--spacing-xl);
     text-align: center;
-    box-shadow: var(--shadow-md);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow:
+        var(--shadow-md),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 0 80px rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     position: relative;
     overflow: hidden;
 }
@@ -157,30 +200,52 @@ main {
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+}
+
+.exercise-area::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 .animation-circle {
-    width: 220px;
-    height: 220px;
-    border: 3px solid rgba(255, 255, 255, 0.2);
+    width: 240px;
+    height: 240px;
+    border: 3px solid rgba(255, 255, 255, 0.25);
     border-radius: var(--radius-circle);
     margin: 0 auto var(--spacing-2xl);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    transition: all var(--transition-fast);
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+    transition: all var(--transition-smooth);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
 }
 
+/* 外层旋转环 */
 .animation-circle::before {
     content: '';
     position: absolute;
-    inset: -8px;
+    inset: -12px;
     border-radius: var(--radius-circle);
-    border: 2px dashed rgba(255, 255, 255, 0.1);
-    animation: rotate 30s linear infinite;
+    border: 2px dashed rgba(255, 255, 255, 0.12);
+    animation: rotate 25s linear infinite;
+}
+
+/* 脉冲光环 */
+.animation-circle::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    border-radius: var(--radius-circle);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    animation: pulse-ring 3s ease-in-out infinite;
 }
 
 @keyframes rotate {
@@ -188,26 +253,78 @@ main {
     to { transform: rotate(360deg); }
 }
 
+@keyframes pulse-ring {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.6;
+    }
+}
+
 .animation-circle.contract {
     border-color: var(--color-primary);
     transform: scale(0.85);
-    box-shadow: var(--shadow-contract);
+    box-shadow:
+        var(--shadow-contract),
+        inset 0 0 40px rgba(16, 185, 129, 0.15);
+}
+
+.animation-circle.contract::after {
+    border-color: var(--color-primary);
+    animation: pulse-ring-contract 0.5s ease-out forwards;
+}
+
+@keyframes pulse-ring-contract {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.3); opacity: 0; }
 }
 
 .animation-circle.relax {
     border-color: var(--color-secondary);
     transform: scale(1);
-    box-shadow: var(--shadow-relax);
+    box-shadow:
+        var(--shadow-relax),
+        inset 0 0 40px rgba(99, 102, 241, 0.15);
+}
+
+.animation-circle.relax::after {
+    border-color: var(--color-secondary);
 }
 
 .inner-circle {
-    width: 140px;
-    height: 140px;
-    background: var(--gradient-accent);
+    width: 150px;
+    height: 150px;
+    background: var(--gradient-neon);
+    background-size: 200% 200%;
     border-radius: var(--radius-circle);
-    transition: all var(--transition-fast);
-    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+    transition: all var(--transition-smooth);
+    box-shadow:
+        0 8px 32px rgba(16, 185, 129, 0.35),
+        inset 0 -4px 12px rgba(0, 0, 0, 0.15);
     position: relative;
+    animation: inner-glow 4s ease-in-out infinite;
+}
+
+@keyframes inner-glow {
+    0%, 100% {
+        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.35), inset 0 -4px 12px rgba(0, 0, 0, 0.15);
+        background-position: 0% 50%;
+    }
+    50% {
+        box-shadow: 0 8px 48px rgba(6, 182, 212, 0.45), inset 0 -4px 12px rgba(0, 0, 0, 0.15);
+        background-position: 100% 50%;
+    }
+}
+
+.inner-circle::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: var(--radius-circle);
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.35), transparent 60%);
 }
 
 .inner-circle::after {
@@ -215,7 +332,7 @@ main {
     position: absolute;
     inset: 0;
     border-radius: var(--radius-circle);
-    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 60%);
+    background: radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1), transparent 50%);
 }
 
 .animation-circle.contract .inner-circle {
@@ -272,20 +389,20 @@ main {
 /* 按钮基础样式 */
 .controls {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
     justify-content: center;
     flex-wrap: wrap;
-    margin-top: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
 }
 
 .controls button {
     flex: 1;
-    min-width: 80px;
+    min-width: 90px;
 }
 
 .btn-primary,
 .btn-secondary {
-    padding: 14px 28px;
+    padding: 16px 32px;
     border: none;
     border-radius: var(--radius-full);
     font-size: 15px;
@@ -294,19 +411,23 @@ main {
     transition: all var(--transition-fast);
     position: relative;
     overflow: hidden;
+    letter-spacing: 0.3px;
 }
 
 .btn-primary {
-    background: var(--gradient-accent);
+    background: var(--gradient-neon);
+    background-size: 200% 100%;
     color: var(--color-white);
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+    box-shadow:
+        0 4px 20px rgba(16, 185, 129, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .btn-primary::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), transparent 50%);
     opacity: 0;
     transition: opacity var(--transition-fast);
 }
@@ -316,46 +437,86 @@ main {
 }
 
 .btn-primary:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+    transform: translateY(-4px);
+    box-shadow:
+        0 12px 35px rgba(16, 185, 129, 0.5),
+        0 4px 15px rgba(6, 182, 212, 0.3);
+    background-position: 100% 0;
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(-2px);
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: translateY(-4px);
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.btn-secondary:active:not(:disabled) {
+    transform: translateY(-2px);
 }
 
 .btn-primary:disabled,
 .btn-secondary:disabled {
-    opacity: 0.4;
+    opacity: 0.35;
     cursor: not-allowed;
     transform: none;
 }
 
 .settings {
     background: var(--gradient-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: var(--radius-xl);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: var(--radius-2xl);
     padding: var(--spacing-xl);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow:
+        var(--shadow-md),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.settings::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
 }
 
 .settings h3,
 .stats h3 {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
     color: var(--color-white);
     font-weight: 700;
     font-size: 18px;
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.settings h3::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: var(--gradient-neon);
+    border-radius: 2px;
 }
 
 .setting-item {
@@ -372,21 +533,25 @@ main {
 }
 
 .setting-item input {
-    width: 65px;
-    padding: var(--spacing-sm);
+    width: 70px;
+    padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     text-align: center;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--color-white);
-    font-weight: 500;
+    font-weight: 600;
     transition: all var(--transition-fast);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .setting-item input:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    box-shadow:
+        0 0 0 3px rgba(16, 185, 129, 0.15),
+        inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.12);
 }
 
 @media (max-width: 480px) {
@@ -407,12 +572,34 @@ main {
 
 .stats {
     background: var(--gradient-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: var(--radius-xl);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: var(--radius-2xl);
     padding: var(--spacing-xl);
     margin-top: var(--spacing-xl);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow:
+        var(--shadow-md),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.stats::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+}
+
+.stats h3::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(180deg, var(--color-secondary), var(--color-pink));
+    border-radius: 2px;
 }
 
 .stats-grid {
@@ -423,13 +610,17 @@ main {
 
 .stat-item {
     text-align: center;
-    padding: var(--spacing-lg);
-    background: var(--gradient-stat);
-    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl) var(--spacing-lg);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(99, 102, 241, 0.15));
+    border-radius: var(--radius-xl);
     color: var(--color-white);
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+    box-shadow:
+        0 4px 20px rgba(16, 185, 129, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-fast);
 }
 
 .stat-item::before {
@@ -439,21 +630,60 @@ main {
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+}
+
+.stat-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    background: var(--gradient-neon);
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.stat-item:hover::after {
+    opacity: 1;
+}
+
+.stat-item:nth-child(1) {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.15));
+}
+
+.stat-item:nth-child(2) {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(99, 102, 241, 0.15));
+}
+
+.stat-item:nth-child(3) {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.15));
+}
+
+.stat-item:nth-child(4) {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(245, 158, 11, 0.15));
 }
 
 .stat-value {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 800;
     margin-bottom: var(--spacing-xs);
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.8));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
 }
 
 .stat-label {
     font-size: 12px;
-    opacity: 0.9;
-    font-weight: 500;
-    letter-spacing: 0.5px;
+    opacity: 0.85;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
 }
 
 /* 预设按钮 */
@@ -466,32 +696,56 @@ main {
 .preset-btn {
     flex: 1;
     padding: var(--spacing-md) 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.06);
     color: rgba(255, 255, 255, 0.9);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.preset-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gradient-neon);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.preset-btn span,
+.preset-btn {
+    position: relative;
+    z-index: 1;
 }
 
 .preset-btn:hover {
-    background: var(--color-primary);
     border-color: var(--color-primary);
-    color: var(--color-white);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.preset-btn:hover::before {
+    opacity: 0.15;
 }
 
 .preset-btn:active {
-    transform: translateY(0);
+    transform: translateY(-1px);
 }
 
 .preset-btn.active {
-    background: var(--gradient-accent);
-    border-color: var(--color-primary);
+    background: var(--gradient-neon);
+    border-color: transparent;
     color: var(--color-white);
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+}
+
+.preset-btn.active::before {
+    opacity: 0;
 }
 
 /* 复选框和时间输入 */
@@ -789,18 +1043,6 @@ main {
 }
 
 /* 额外的动画效果 */
-@keyframes breathe {
-    0%, 100% {
-        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
-    }
-    50% {
-        box-shadow: 0 8px 48px rgba(16, 185, 129, 0.5);
-    }
-}
-
-.inner-circle {
-    animation: breathe 4s ease-in-out infinite;
-}
 
 /* 按钮悬停时的光效 */
 .btn-primary::after {
@@ -813,7 +1055,7 @@ main {
     background: linear-gradient(
         45deg,
         transparent 40%,
-        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.15) 50%,
         transparent 60%
     );
     transform: translateX(-100%);
@@ -825,25 +1067,24 @@ main {
 }
 
 /* 统计卡片悬停效果 */
-.stat-item {
-    transition: all var(--transition-fast);
-}
-
 .stat-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.35);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow:
+        0 12px 40px rgba(16, 185, 129, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 /* 设置面板项目的悬停效果 */
 .setting-item {
     padding: var(--spacing-sm) var(--spacing-md);
     margin: 0 calc(-1 * var(--spacing-md));
-    border-radius: var(--radius-md);
-    transition: background var(--transition-fast);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
 }
 
 .setting-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(4px);
 }
 
 /* 进度条动画 */
@@ -861,7 +1102,7 @@ main {
     background: linear-gradient(
         90deg,
         transparent,
-        rgba(255, 255, 255, 0.3),
+        rgba(255, 255, 255, 0.35),
         transparent
     );
     animation: shimmer 2s infinite;
@@ -879,9 +1120,80 @@ main {
 
 @keyframes pulse-glow {
     0%, 100% {
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
     }
     50% {
-        box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+        box-shadow: 0 4px 30px rgba(6, 182, 212, 0.5);
+    }
+}
+
+/* 训练完成庆祝动画 */
+@keyframes celebrate {
+    0%, 100% { transform: scale(1); }
+    10% { transform: scale(1.1) rotate(-3deg); }
+    20% { transform: scale(1.1) rotate(3deg); }
+    30% { transform: scale(1.05) rotate(-2deg); }
+    40% { transform: scale(1.05) rotate(2deg); }
+    50% { transform: scale(1); }
+}
+
+.exercise-area.completed {
+    animation: celebrate 0.8s ease-out;
+}
+
+/* 输入框聚焦动画 */
+.setting-item input:focus {
+    transform: scale(1.02);
+}
+
+/* 状态徽章动画 */
+.status-badge.online {
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* 页面加载动画 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.exercise-area,
+.settings,
+.stats {
+    animation: fadeInUp 0.6s ease-out backwards;
+}
+
+.exercise-area { animation-delay: 0.1s; }
+.settings { animation-delay: 0.2s; }
+.stats { animation-delay: 0.3s; }
+
+/* 浮动光点装饰 */
+@keyframes float-particle {
+    0%, 100% {
+        transform: translateY(0) translateX(0);
+        opacity: 0.3;
+    }
+    25% {
+        transform: translateY(-20px) translateX(10px);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(-10px) translateX(-10px);
+        opacity: 0.4;
+    }
+    75% {
+        transform: translateY(-30px) translateX(5px);
+        opacity: 0.5;
     }
 }
