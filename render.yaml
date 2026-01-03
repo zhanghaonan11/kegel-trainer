@@ -30,7 +30,6 @@ services:
   - type: web
     name: kegel-trainer
     runtime: static
-    plan: free
     buildCommand: echo "No build needed"
     staticPublishPath: .
     pullRequestPreviewsEnabled: true
