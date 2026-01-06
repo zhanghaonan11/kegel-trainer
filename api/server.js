@@ -2,10 +2,14 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 const { testConnection, initTables } = require('./db');
 const routes = require('./routes');
 
 const app = express();
+
+// 静态文件服务（前端页面）
+app.use(express.static(path.join(__dirname, '..')));
 const PORT = process.env.PORT || 3000;
 
 // 中间件
@@ -30,8 +34,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// 根路径
-app.get('/', (req, res) => {
+// 根路径 - 由静态文件服务处理 index.html
+// API 文档接口
+app.get('/api', (req, res) => {
   res.json({
     name: '凯格尔运动训练器 API',
     version: '1.0.0',

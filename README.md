@@ -48,7 +48,27 @@
    ```
 3. 打开 `index.html`，数据自动同步到云端数据库
 
-### 方式 3：部署到 Vercel（推荐）
+### 方式 3：macOS 后台服务（推荐 Mac 用户）
+
+使用 launchd 创建用户级后台服务，开机自动启动：
+
+```bash
+# 加载并启动服务
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.shan.kegel-trainer.plist
+
+# 查看服务状态
+launchctl print gui/$(id -u)/com.shan.kegel-trainer
+
+# 重启服务
+launchctl kickstart -k gui/$(id -u)/com.shan.kegel-trainer
+
+# 停止服务
+launchctl bootout gui/$(id -u)/com.shan.kegel-trainer
+```
+
+详细命令请参考 `launchctl-kegel.markdown`
+
+### 方式 4：部署到 Vercel（推荐云端部署）
 
 一键部署到 Vercel，支持前后端一体化部署：
 
@@ -72,7 +92,7 @@
 
 详细步骤请查看：`VERCEL_DEPLOYMENT.md`
 
-### 方式 4：部署到 Render（一键部署）
+### 方式 5：部署到 Render（一键部署）
 
 点击下方按钮一键部署到 Render：
 
@@ -87,7 +107,7 @@
    - `DB_NAME` - 数据库名称
 3. 服务会自动重新部署
 
-### 方式 5：Python 服务器（简单）
+### 方式 6：Python 服务器（简单）
 1. 运行服务器:
    ```bash
    python3 server.py
@@ -168,6 +188,7 @@ kegel/
 ├── api-client.js               # API 客户端（云端同步）
 ├── script.js                   # 核心逻辑
 ├── server.py                   # Python HTTP服务器（简单）
+├── launchctl-kegel.markdown    # macOS launchctl 服务管理命令
 ├── api/                        # 后端 API（Node.js）
 │   ├── server.js               # Express 服务器
 │   ├── index.js                # Vercel Serverless 入口
@@ -238,6 +259,8 @@ kegel/
 - **数据库配置**: `DATABASE_SETUP.md`
 - **Vercel 部署**: `VERCEL_DEPLOYMENT.md`
 - **部署清单**: `DEPLOYMENT_CHECKLIST.md`
+- **macOS 服务管理**: `launchctl-kegel.markdown`
+- **1Panel 部署**: `1PANEL_DEPLOYMENT.md`
 - **API 文档**: `api/README.md`
 
 ## 🌐 在线演示
